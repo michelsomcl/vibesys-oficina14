@@ -14,6 +14,8 @@ export const useOrcamentoServicos = (orcamentoId?: string) => {
     queryFn: async (): Promise<(OrcamentoServico & { servico: Tables<"servicos"> })[]> => {
       if (!orcamentoId) return []
       
+      console.log("Buscando serviços para orçamento:", orcamentoId)
+      
       const { data, error } = await supabase
         .from("orcamento_servicos")
         .select(`
@@ -22,7 +24,12 @@ export const useOrcamentoServicos = (orcamentoId?: string) => {
         `)
         .eq("orcamento_id", orcamentoId)
 
-      if (error) throw error
+      if (error) {
+        console.error("Erro ao buscar serviços do orçamento:", error)
+        throw error
+      }
+      
+      console.log("Serviços encontrados:", data)
       return data || []
     },
     enabled: !!orcamentoId,
@@ -34,13 +41,20 @@ export const useCreateOrcamentoServico = () => {
 
   return useMutation({
     mutationFn: async (data: OrcamentoServicoInsert) => {
+      console.log("Criando serviço no orçamento:", data)
+      
       const { data: result, error } = await supabase
         .from("orcamento_servicos")
         .insert(data)
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error("Erro ao criar serviço:", error)
+        throw error
+      }
+      
+      console.log("Serviço criado com sucesso:", result)
       return result
     },
     onSuccess: (_, variables) => {
@@ -60,12 +74,19 @@ export const useDeleteOrcamentoServico = () => {
 
   return useMutation({
     mutationFn: async ({ id, orcamentoId }: { id: string, orcamentoId: string }) => {
+      console.log("Removendo serviço:", id)
+      
       const { error } = await supabase
         .from("orcamento_servicos")
         .delete()
         .eq("id", id)
 
-      if (error) throw error
+      if (error) {
+        console.error("Erro ao remover serviço:", error)
+        throw error
+      }
+      
+      console.log("Serviço removido com sucesso")
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["orcamento_servicos", variables.orcamentoId] })

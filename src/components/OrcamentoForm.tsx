@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -116,28 +115,34 @@ export const OrcamentoForm = ({ orcamento, onSuccess, onCancel }: OrcamentoFormP
     // Salvar peças
     for (const peca of localPecas) {
       try {
+        console.log("Salvando peça:", peca)
         await createOrcamentoPeca.mutateAsync({
           orcamento_id: orcamentoId,
           peca_id: peca.peca_id,
           quantidade: peca.quantidade,
           valor_unitario: peca.valor_unitario,
         })
+        console.log("Peça salva com sucesso")
       } catch (error) {
         console.error("Erro ao salvar peça:", error)
+        throw error // Propagar o erro para interromper o processo
       }
     }
 
     // Salvar serviços
     for (const servico of localServicos) {
       try {
+        console.log("Salvando serviço:", servico)
         await createOrcamentoServico.mutateAsync({
           orcamento_id: orcamentoId,
           servico_id: servico.servico_id,
           horas: servico.horas,
           valor_hora: servico.valor_hora,
         })
+        console.log("Serviço salvo com sucesso")
       } catch (error) {
         console.error("Erro ao salvar serviço:", error)
+        throw error // Propagar o erro para interromper o processo
       }
     }
   }
@@ -146,6 +151,8 @@ export const OrcamentoForm = ({ orcamento, onSuccess, onCancel }: OrcamentoFormP
     try {
       console.log("Dados do formulário:", data)
       console.log("Cliente selecionado:", selectedCliente)
+      console.log("Peças locais para salvar:", localPecas)
+      console.log("Serviços locais para salvar:", localServicos)
       
       if (orcamento) {
         await updateOrcamento.mutateAsync({
@@ -173,13 +180,22 @@ export const OrcamentoForm = ({ orcamento, onSuccess, onCancel }: OrcamentoFormP
 
         // Salvar peças e serviços se houver
         if (localPecas.length > 0 || localServicos.length > 0) {
+          console.log("Iniciando salvamento de peças e serviços...")
           await salvarPecasEServicos(novoOrcamento.id)
-          toast.success("Orçamento criado com peças e serviços!")
+          
+          if (localPecas.length > 0 && localServicos.length > 0) {
+            toast.success("Orçamento criado com peças e serviços!")
+          } else if (localPecas.length > 0) {
+            toast.success("Orçamento criado com peças!")
+          } else {
+            toast.success("Orçamento criado com serviços!")
+          }
         }
       }
       onSuccess?.()
     } catch (error) {
       console.error("Erro ao salvar orçamento:", error)
+      toast.error("Erro ao salvar orçamento. Verifique os dados e tente novamente.")
     }
   }
 
@@ -212,126 +228,4 @@ export const OrcamentoForm = ({ orcamento, onSuccess, onCancel }: OrcamentoFormP
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {clientes.map((cliente) => (
-                      <SelectItem key={cliente.id} value={cliente.id}>
-                        {cliente.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="veiculo_info"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Veículo</FormLabel>
-                <FormControl>
-                  <Input 
-                    {...field} 
-                    value={
-                      !selectedClienteId 
-                        ? "Selecione um cliente primeiro"
-                        : !hasVeiculoInfo
-                        ? "Nenhum veículo cadastrado para este cliente"
-                        : field.value
-                    }
-                    readOnly
-                    className="bg-gray-50"
-                    placeholder="Informações do veículo aparecerão aqui"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="grid grid-cols-3 gap-4">
-          <FormField
-            control={form.control}
-            name="km_atual"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Km Atual</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="Digite a quilometragem atual" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="data_orcamento"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Data do Orçamento</FormLabel>
-                <FormControl>
-                  <Input type="date" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="validade"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Validade</FormLabel>
-                <FormControl>
-                  <Input type="date" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        {validadeDias > 0 && (
-          <div className="bg-blue-50 p-3 rounded-lg">
-            <p className="text-sm text-blue-700">
-              <strong>Validade:</strong> Este orçamento é válido por {validadeDias} dia(s)
-            </p>
-          </div>
-        )}
-
-        <Separator />
-
-        <OrcamentoPecasList 
-          orcamentoId={orcamento?.id} 
-          localPecas={localPecas}
-          setLocalPecas={setLocalPecas}
-        />
-
-        <Separator />
-
-        <OrcamentoServicosList 
-          orcamentoId={orcamento?.id}
-          localServicos={localServicos}
-          setLocalServicos={setLocalServicos}
-        />
-
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" type="button" onClick={onCancel}>
-            Cancelar
-          </Button>
-          <Button 
-            type="submit"
-            disabled={createOrcamento.isPending || updateOrcamento.isPending}
-            className="bg-primary hover:bg-primary/90"
-          >
-            {orcamento ? "Atualizar Orçamento" : "Salvar Orçamento"}
-          </Button>
-        </div>
-      </form>
-    </Form>
-  )
-}
+                    {clientes.map

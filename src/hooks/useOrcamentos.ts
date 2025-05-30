@@ -51,13 +51,20 @@ export const useCreateOrcamento = () => {
 
   return useMutation({
     mutationFn: async (orcamento: OrcamentoInsert) => {
+      console.log("Criando novo orçamento:", orcamento)
+      
       const { data: newOrcamento, error } = await supabase
         .from("orcamentos")
         .insert(orcamento)
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error("Erro ao criar orçamento:", error)
+        throw error
+      }
+      
+      console.log("Orçamento criado:", newOrcamento)
       return newOrcamento
     },
     onSuccess: () => {
@@ -76,6 +83,21 @@ export const useUpdateOrcamento = () => {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: OrcamentoUpdate & { id: string }) => {
+      console.log("Atualizando orçamento:", id, updates)
+      
+      // Primeiro, buscar o status atual do orçamento
+      const { data: currentOrcamento, error: fetchError } = await supabase
+        .from("orcamentos")
+        .select("status")
+        .eq("id", id)
+        .single()
+
+      if (fetchError) throw fetchError
+
+      const currentStatus = currentOrcamento.status
+      const newStatus = updates.status
+
+      // Atualizar o orçamento
       const { data, error } = await supabase
         .from("orcamentos")
         .update(updates)
@@ -84,10 +106,29 @@ export const useUpdateOrcamento = () => {
         .single()
 
       if (error) throw error
+
+      // Se o status mudou de "Aprovado" para outro status, excluir a OS vinculada
+      if (currentStatus === "Aprovado" && newStatus && newStatus !== "Aprovado") {
+        console.log("Status mudou de Aprovado para", newStatus, "- Excluindo OS vinculada")
+        
+        const { error: deleteOSError } = await supabase
+          .from("ordem_servico")
+          .delete()
+          .eq("orcamento_id", id)
+
+        if (deleteOSError) {
+          console.error("Erro ao excluir OS:", deleteOSError)
+          // Não falha a operação principal, apenas loga o erro
+        } else {
+          console.log("OS excluída com sucesso")
+        }
+      }
+
       return data
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orcamentos"] })
+      queryClient.invalidateQueries({ queryKey: ["ordens_servico"] })
       toast.success("Orçamento atualizado com sucesso!")
     },
     onError: (error) => {
