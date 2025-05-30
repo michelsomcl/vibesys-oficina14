@@ -4,16 +4,16 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { useClientes } from "@/hooks/useClientes"
 import { useCreateOrcamento, useUpdateOrcamento } from "@/hooks/useOrcamentos"
 import { useCreateOrcamentoPeca } from "@/hooks/useOrcamentoPecas"
 import { useCreateOrcamentoServico } from "@/hooks/useOrcamentoServicos"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { Form } from "@/components/ui/form"
 import { OrcamentoPecasList } from "@/components/OrcamentoPecasList"
 import { OrcamentoServicosList } from "@/components/OrcamentoServicosList"
+import { OrcamentoClienteSection } from "@/components/orcamento/OrcamentoClienteSection"
+import { OrcamentoDateSection } from "@/components/orcamento/OrcamentoDateSection"
 import { differenceInDays, parseISO } from "date-fns"
 import { toast } from "sonner"
 
@@ -73,7 +73,7 @@ export const OrcamentoForm = ({ orcamento, onSuccess, onCancel }: OrcamentoFormP
     },
   })
 
-  // Atualiza as informações do cliente selecionado
+  // Update selected client information
   useEffect(() => {
     if (selectedClienteId) {
       const cliente = clientes.find(c => c.id === selectedClienteId)
@@ -91,13 +91,12 @@ export const OrcamentoForm = ({ orcamento, onSuccess, onCancel }: OrcamentoFormP
     }
   }, [selectedClienteId, clientes, form])
 
-  // Carrega dados do orçamento existente
+  // Load existing budget data
   useEffect(() => {
     if (orcamento) {
-      console.log("Carregando orçamento:", orcamento)
+      console.log("Loading budget:", orcamento)
       setSelectedClienteId(orcamento.cliente_id)
       
-      // Define informações do veículo baseado no cliente
       if (orcamento.cliente) {
         const cliente = orcamento.cliente
         if (cliente.marca && cliente.modelo) {
@@ -109,40 +108,40 @@ export const OrcamentoForm = ({ orcamento, onSuccess, onCancel }: OrcamentoFormP
   }, [orcamento, form])
 
   const salvarPecasEServicos = async (orcamentoId: string) => {
-    console.log("Salvando peças e serviços para orçamento:", orcamentoId)
-    console.log("Peças locais:", localPecas)
-    console.log("Serviços locais:", localServicos)
+    console.log("Saving parts and services for budget:", orcamentoId)
+    console.log("Local parts:", localPecas)
+    console.log("Local services:", localServicos)
 
-    // Salvar peças
+    // Save parts
     for (const peca of localPecas) {
       try {
-        console.log("Salvando peça:", peca)
+        console.log("Saving part:", peca)
         await createOrcamentoPeca.mutateAsync({
           orcamento_id: orcamentoId,
           peca_id: peca.peca_id,
           quantidade: peca.quantidade,
           valor_unitario: peca.valor_unitario,
         })
-        console.log("Peça salva com sucesso")
+        console.log("Part saved successfully")
       } catch (error) {
-        console.error("Erro ao salvar peça:", error)
+        console.error("Error saving part:", error)
         throw error
       }
     }
 
-    // Salvar serviços
+    // Save services
     for (const servico of localServicos) {
       try {
-        console.log("Salvando serviço:", servico)
+        console.log("Saving service:", servico)
         await createOrcamentoServico.mutateAsync({
           orcamento_id: orcamentoId,
           servico_id: servico.servico_id,
           horas: servico.horas,
           valor_hora: servico.valor_hora,
         })
-        console.log("Serviço salvo com sucesso")
+        console.log("Service saved successfully")
       } catch (error) {
-        console.error("Erro ao salvar serviço:", error)
+        console.error("Error saving service:", error)
         throw error
       }
     }
@@ -150,10 +149,10 @@ export const OrcamentoForm = ({ orcamento, onSuccess, onCancel }: OrcamentoFormP
 
   const onSubmit = async (data: OrcamentoFormData) => {
     try {
-      console.log("Dados do formulário:", data)
-      console.log("Cliente selecionado:", selectedCliente)
-      console.log("Peças locais para salvar:", localPecas)
-      console.log("Serviços locais para salvar:", localServicos)
+      console.log("Form data:", data)
+      console.log("Selected client:", selectedCliente)
+      console.log("Local parts to save:", localPecas)
+      console.log("Local services to save:", localServicos)
       
       if (orcamento) {
         await updateOrcamento.mutateAsync({
@@ -165,7 +164,7 @@ export const OrcamentoForm = ({ orcamento, onSuccess, onCancel }: OrcamentoFormP
           validade: data.validade,
         })
       } else {
-        // Criar novo orçamento
+        // Create new budget
         const novoOrcamento = await createOrcamento.mutateAsync({
           cliente_id: data.cliente_id,
           veiculo_id: null,
@@ -177,26 +176,26 @@ export const OrcamentoForm = ({ orcamento, onSuccess, onCancel }: OrcamentoFormP
           status: "Pendente",
         })
 
-        console.log("Orçamento criado:", novoOrcamento)
+        console.log("Budget created:", novoOrcamento)
 
-        // Salvar peças e serviços se houver
+        // Save parts and services if any
         if (localPecas.length > 0 || localServicos.length > 0) {
-          console.log("Iniciando salvamento de peças e serviços...")
+          console.log("Starting save of parts and services...")
           await salvarPecasEServicos(novoOrcamento.id)
           
           if (localPecas.length > 0 && localServicos.length > 0) {
-            toast.success("Orçamento criado com peças e serviços!")
+            toast.success("Budget created with parts and services!")
           } else if (localPecas.length > 0) {
-            toast.success("Orçamento criado com peças!")
+            toast.success("Budget created with parts!")
           } else {
-            toast.success("Orçamento criado com serviços!")
+            toast.success("Budget created with services!")
           }
         }
       }
       onSuccess?.()
     } catch (error) {
-      console.error("Erro ao salvar orçamento:", error)
-      toast.error("Erro ao salvar orçamento. Verifique os dados e tente novamente.")
+      console.error("Error saving budget:", error)
+      toast.error("Error saving budget. Please check the data and try again.")
     }
   }
 
@@ -207,7 +206,7 @@ export const OrcamentoForm = ({ orcamento, onSuccess, onCancel }: OrcamentoFormP
 
   const hasVeiculoInfo = selectedCliente && selectedCliente.marca && selectedCliente.modelo
 
-  // Calcular dias de validade
+  // Calculate validity days
   const validadeDias = form.watch("validade") && form.watch("data_orcamento") 
     ? differenceInDays(parseISO(form.watch("validade")), parseISO(form.watch("data_orcamento")))
     : 0
@@ -215,92 +214,16 @@ export const OrcamentoForm = ({ orcamento, onSuccess, onCancel }: OrcamentoFormP
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="cliente_id"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Cliente</FormLabel>
-                <Select onValueChange={handleClienteChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o cliente" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {clientes.map((cliente) => (
-                      <SelectItem key={cliente.id} value={cliente.id}>
-                        {cliente.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <OrcamentoClienteSection
+          form={form}
+          onClienteChange={handleClienteChange}
+          hasVeiculoInfo={hasVeiculoInfo}
+        />
 
-          <FormField
-            control={form.control}
-            name="km_atual"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>KM Atual</FormLabel>
-                <FormControl>
-                  <Input placeholder="Ex: 50000" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        {hasVeiculoInfo && (
-          <FormField
-            control={form.control}
-            name="veiculo_info"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Informações do Veículo</FormLabel>
-                <FormControl>
-                  <Input {...field} readOnly className="bg-gray-50" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
-
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="data_orcamento"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Data do Orçamento</FormLabel>
-                <FormControl>
-                  <Input type="date" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="validade"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Validade {validadeDias > 0 && `(${validadeDias} dias)`}</FormLabel>
-                <FormControl>
-                  <Input type="date" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+        <OrcamentoDateSection
+          form={form}
+          validadeDias={validadeDias}
+        />
 
         <Separator />
 
