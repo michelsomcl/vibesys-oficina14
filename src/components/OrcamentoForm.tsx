@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -125,7 +126,7 @@ export const OrcamentoForm = ({ orcamento, onSuccess, onCancel }: OrcamentoFormP
         console.log("Peça salva com sucesso")
       } catch (error) {
         console.error("Erro ao salvar peça:", error)
-        throw error // Propagar o erro para interromper o processo
+        throw error
       }
     }
 
@@ -142,7 +143,7 @@ export const OrcamentoForm = ({ orcamento, onSuccess, onCancel }: OrcamentoFormP
         console.log("Serviço salvo com sucesso")
       } catch (error) {
         console.error("Erro ao salvar serviço:", error)
-        throw error // Propagar o erro para interromper o processo
+        throw error
       }
     }
   }
@@ -228,4 +229,104 @@ export const OrcamentoForm = ({ orcamento, onSuccess, onCancel }: OrcamentoFormP
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {clientes.map
+                    {clientes.map((cliente) => (
+                      <SelectItem key={cliente.id} value={cliente.id}>
+                        {cliente.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="km_atual"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>KM Atual</FormLabel>
+                <FormControl>
+                  <Input placeholder="Ex: 50000" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        {hasVeiculoInfo && (
+          <FormField
+            control={form.control}
+            name="veiculo_info"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Informações do Veículo</FormLabel>
+                <FormControl>
+                  <Input {...field} readOnly className="bg-gray-50" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="data_orcamento"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Data do Orçamento</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="validade"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Validade {validadeDias > 0 && `(${validadeDias} dias)`}</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <Separator />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <OrcamentoPecasList 
+            orcamentoId={orcamento?.id}
+            localPecas={localPecas}
+            setLocalPecas={setLocalPecas}
+          />
+          
+          <OrcamentoServicosList 
+            orcamentoId={orcamento?.id}
+            localServicos={localServicos}
+            setLocalServicos={setLocalServicos}
+          />
+        </div>
+
+        <div className="flex gap-4 pt-6">
+          <Button type="submit" className="flex-1">
+            {orcamento ? "Atualizar Orçamento" : "Criar Orçamento"}
+          </Button>
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Cancelar
+          </Button>
+        </div>
+      </form>
+    </Form>
+  )
+}
