@@ -68,7 +68,7 @@ export const EditServicoDialog = ({ servico, open, onOpenChange }: EditServicoDi
           </div>
           
           <div>
-            <Label htmlFor="valor_hora">Valor por Hora</Label>
+            <Label htmlFor="valor_hora">Valor Por Serviço</Label>
             <Input 
               id="valor_hora" 
               type="number"

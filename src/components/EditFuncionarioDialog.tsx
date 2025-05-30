@@ -94,6 +94,7 @@ export const EditFuncionarioDialog = ({ funcionario, open, onOpenChange }: EditF
                   <SelectItem value="Eletricista">Eletricista</SelectItem>
                   <SelectItem value="Auxiliar">Auxiliar</SelectItem>
                   <SelectItem value="Recepcionista">Recepcionista</SelectItem>
+                  <SelectItem value="Proprietario">Proprietário</SelectItem>
                 </SelectContent>
               </Select>
             </div>

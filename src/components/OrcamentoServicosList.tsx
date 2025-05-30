@@ -161,11 +161,11 @@ export const OrcamentoServicosList = ({ orcamentoId, localServicos = [], setLoca
           </Select>
         </div>
         <div>
-          <label className="text-sm font-medium">Horas</label>
+          <label className="text-sm font-medium">Qtd</label>
           <Input
             type="number"
             step="0.5"
-            placeholder="Horas"
+            placeholder="Qtd"
             value={horas}
             onChange={(e) => setHoras(e.target.value)}
           />

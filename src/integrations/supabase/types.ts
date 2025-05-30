@@ -196,6 +196,10 @@ export type Database = {
       funcionarios: {
         Row: {
           categoria: Database["public"]["Enums"]["categoria_funcionario"]
+          comissao_lavagem: number | null
+          comissao_pecas: number | null
+          comissao_servicos_externos: number | null
+          comissao_servicos_internos: number | null
           created_at: string
           documento: string
           endereco: string | null
@@ -206,6 +210,10 @@ export type Database = {
         }
         Insert: {
           categoria: Database["public"]["Enums"]["categoria_funcionario"]
+          comissao_lavagem?: number | null
+          comissao_pecas?: number | null
+          comissao_servicos_externos?: number | null
+          comissao_servicos_internos?: number | null
           created_at?: string
           documento: string
           endereco?: string | null
@@ -216,6 +224,10 @@ export type Database = {
         }
         Update: {
           categoria?: Database["public"]["Enums"]["categoria_funcionario"]
+          comissao_lavagem?: number | null
+          comissao_pecas?: number | null
+          comissao_servicos_externos?: number | null
+          comissao_servicos_internos?: number | null
           created_at?: string
           documento?: string
           endereco?: string | null
@@ -570,7 +582,13 @@ export type Database = {
       }
     }
     Enums: {
-      categoria_funcionario: "Mecânico" | "Pintor" | "Lavador"
+      categoria_funcionario:
+        | "Mecânico"
+        | "Pintor"
+        | "Lavador"
+        | "Recepcionista"
+        | "Proprietario"
+        | "Eletricista"
       forma_pagamento: "PIX" | "Cartão" | "Dinheiro" | "Transferência"
       status_conta: "Pendente" | "Pago" | "Recebido" | "Atrasado" | "Cancelado"
       status_orcamento: "Pendente" | "Aprovado" | "Reprovado" | "Cancelado"
@@ -696,7 +714,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      categoria_funcionario: ["Mecânico", "Pintor", "Lavador"],
+      categoria_funcionario: [
+        "Mecânico",
+        "Pintor",
+        "Lavador",
+        "Recepcionista",
+        "Proprietario",
+        "Eletricista",
+      ],
       forma_pagamento: ["PIX", "Cartão", "Dinheiro", "Transferência"],
       status_conta: ["Pendente", "Pago", "Recebido", "Atrasado", "Cancelado"],
       status_orcamento: ["Pendente", "Aprovado", "Reprovado", "Cancelado"],
